@@ -1,0 +1,9 @@
+# Build output directories
+bin/
+obj/
+
+# Visual Studio / VS Code user settings
+.vs/
+.vscode/
+*.user
+*.suo
