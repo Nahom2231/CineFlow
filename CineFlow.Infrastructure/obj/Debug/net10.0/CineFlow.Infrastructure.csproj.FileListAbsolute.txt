@@ -15,3 +15,6 @@ C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infra
 C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\refint\CineFlow.Infrastructure.dll
 C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.pdb
 C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\ref\CineFlow.Infrastructure.dll
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Infrastructure.runtimeconfig.json
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.sourcelink.json
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.genruntimeconfig.cache
