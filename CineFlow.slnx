@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/CineFlow.APplication/">
+    <Project Path="CineFlow.APplication/CineFlow.Application.csproj" />
+  </Folder>
+  <Project Path="CineFlow.Api/CineFlow.Api.csproj" />
+  <Project Path="CineFlow.Domain/CineFlow.Domain.csproj" />
+  <Project Path="CineFlow.Infrastructure/CineFlow.Infrastructure.csproj" />
+</Solution>

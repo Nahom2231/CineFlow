@@ -1,0 +1,17 @@
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Infrastructure.deps.json
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Infrastructure.dll
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Infrastructure.pdb
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Application.dll
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Domain.dll
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Application.pdb
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\bin\Debug\net10.0\CineFlow.Domain.pdb
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.AssemblyInfo.cs
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.C9EFA748.Up2Date
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.dll
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\refint\CineFlow.Infrastructure.dll
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\CineFlow.Infrastructure.pdb
+C:\Users\25194\CineFlow\CineFlow.Infrastructure\obj\Debug\net10.0\ref\CineFlow.Infrastructure.dll

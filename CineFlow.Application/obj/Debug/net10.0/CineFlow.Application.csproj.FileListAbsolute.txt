@@ -1,0 +1,15 @@
+C:\Users\25194\CineFlow\CineFlow.APplication\bin\Debug\net10.0\CineFlow.Application.deps.json
+C:\Users\25194\CineFlow\CineFlow.APplication\bin\Debug\net10.0\CineFlow.Application.dll
+C:\Users\25194\CineFlow\CineFlow.APplication\bin\Debug\net10.0\CineFlow.Application.pdb
+C:\Users\25194\CineFlow\CineFlow.APplication\bin\Debug\net10.0\CineFlow.Domain.dll
+C:\Users\25194\CineFlow\CineFlow.APplication\bin\Debug\net10.0\CineFlow.Domain.pdb
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.csproj.AssemblyReference.cache
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.AssemblyInfoInputs.cache
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.AssemblyInfo.cs
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.csproj.CoreCompileInputs.cache
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.CAA2DBC7.Up2Date
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.dll
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\refint\CineFlow.Application.dll
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.pdb
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\ref\CineFlow.Application.dll
