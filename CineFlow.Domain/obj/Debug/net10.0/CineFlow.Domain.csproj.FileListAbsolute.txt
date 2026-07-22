@@ -9,3 +9,4 @@ C:\Users\25194\CineFlow\CineFlow.Domain\obj\Debug\net10.0\CineFlow.Domain.dll
 C:\Users\25194\CineFlow\CineFlow.Domain\obj\Debug\net10.0\refint\CineFlow.Domain.dll
 C:\Users\25194\CineFlow\CineFlow.Domain\obj\Debug\net10.0\CineFlow.Domain.pdb
 C:\Users\25194\CineFlow\CineFlow.Domain\obj\Debug\net10.0\ref\CineFlow.Domain.dll
+C:\Users\25194\CineFlow\CineFlow.Domain\obj\Debug\net10.0\CineFlow.Domain.sourcelink.json

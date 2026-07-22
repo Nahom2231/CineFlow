@@ -13,3 +13,4 @@ C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Applicat
 C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\refint\CineFlow.Application.dll
 C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.pdb
 C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\ref\CineFlow.Application.dll
+C:\Users\25194\CineFlow\CineFlow.APplication\obj\Debug\net10.0\CineFlow.Application.sourcelink.json

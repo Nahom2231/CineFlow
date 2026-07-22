@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CineFlow.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3c7b7894619ad9ae64a636b39d9284be0c8af7a4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c476950ac256dba89a94fa844ec5e0cccf8dca9")]
 [assembly: System.Reflection.AssemblyProductAttribute("CineFlow.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CineFlow.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
