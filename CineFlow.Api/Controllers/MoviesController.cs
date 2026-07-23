@@ -1,3 +1,4 @@
+using CineFlow.Application.Movies.Commands;
 using CineFlow.Application.Movies.Queries;
 
 using MediatR;
@@ -28,5 +29,13 @@ public class MoviesController : ControllerBase
         var result = await _mediator.Send(query, cancellationToken);
 
         return Ok(result);
+    }
+    [HttpPost]
+    [Consumes("multipart/form-data")]
+
+    public async Task<IActionResult> CreateMovie([FromForm] CreateMovieCommand command, CancellationToken cancellationToken)
+    {
+        var movieId = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetFilteredMovies), new { id = movieId }, movieId);
     }
 }

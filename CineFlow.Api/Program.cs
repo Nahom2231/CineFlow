@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureService(builder.Configuration);
+builder.Services.AddControllers();
 var app = builder.Build();
 
 
@@ -19,5 +20,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.UseStaticFiles();
+app.MapControllers();
+app.Run();
 
 

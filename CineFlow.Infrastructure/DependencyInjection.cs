@@ -1,5 +1,6 @@
 using CineFlow.Application.Common.Interfaces;
 using CineFlow.Infrastructure.Persistence;
+using CineFlow.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddDbContext<CineFlowDbContext>(options =>
         options.UseNpgsql(connectionString));
         services.AddScoped<ICineFlowDbContext>(provider =>provider.GetRequiredService<CineFlowDbContext>());
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
         return services;
     }
 }
