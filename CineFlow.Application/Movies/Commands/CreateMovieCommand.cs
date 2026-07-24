@@ -1,8 +1,11 @@
 using CineFlow.Application.Common.Interfaces;
 using CineFlow.Domain.Entities;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace CineFlow.Application.Movies.Commands;
 
@@ -17,9 +20,9 @@ public record CreateMovieCommand(
     Guid DirectorId,
     List<Guid> StarIds,
     Stream FeaturedImage,
-    List<Stream> GalleryImages) : IRequest<Guid>;
+    List<Stream> GalleryImages);
 
-    public class CreateMovieCommandHandler : IRequestHandler<CreateMovieCommand, Guid>
+public class CreateMovieCommandHandler
 {
     private readonly ICineFlowDbContext _context;
     private readonly IFileStorageService _fileStorage;
