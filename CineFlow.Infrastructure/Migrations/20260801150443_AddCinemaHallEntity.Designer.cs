@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CineFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CineFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(CineFlowDbContext))]
-    partial class CineFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801150443_AddCinemaHallEntity")]
+    partial class AddCinemaHallEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,6 +99,9 @@ namespace CineFlow.Infrastructure.Migrations
                     b.Property<Guid>("DirectorId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("DirectorId1")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
 
@@ -127,6 +133,8 @@ namespace CineFlow.Infrastructure.Migrations
 
                     b.HasIndex("DirectorId");
 
+                    b.HasIndex("DirectorId1");
+
                     b.ToTable("Movies", (string)null);
                 });
 
@@ -145,12 +153,6 @@ namespace CineFlow.Infrastructure.Migrations
                     b.Property<Guid>("MovieId")
                         .HasColumnType("uuid");
 
-                    b.Property<uint>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
                     b.Property<DateTime>("Showtime")
                         .HasColumnType("timestamp with time zone");
 
@@ -165,40 +167,6 @@ namespace CineFlow.Infrastructure.Migrations
                     b.HasIndex("MovieId");
 
                     b.ToTable("Schedules", (string)null);
-                });
-
-            modelBuilder.Entity("CineFlow.Domain.Entities.SeatReservation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ExpiredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("ReservedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ScheduleId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("SeatNumber")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ScheduleId");
-
-                    b.ToTable("SeatReservation", (string)null);
                 });
 
             modelBuilder.Entity("CineFlow.Domain.Entities.Star", b =>
@@ -232,9 +200,6 @@ namespace CineFlow.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("MockTransactionReference")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -251,12 +216,8 @@ namespace CineFlow.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<DateTime?>("UsedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -479,10 +440,14 @@ namespace CineFlow.Infrastructure.Migrations
             modelBuilder.Entity("CineFlow.Domain.Entities.Movie", b =>
                 {
                     b.HasOne("CineFlow.Domain.Entities.Director", "Director")
-                        .WithMany("Movies")
+                        .WithMany()
                         .HasForeignKey("DirectorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("CineFlow.Domain.Entities.Director", null)
+                        .WithMany("Movies")
+                        .HasForeignKey("DirectorId1");
 
                     b.Navigation("Director");
                 });
@@ -504,17 +469,6 @@ namespace CineFlow.Infrastructure.Migrations
                     b.Navigation("CinemaHall");
 
                     b.Navigation("Movie");
-                });
-
-            modelBuilder.Entity("CineFlow.Domain.Entities.SeatReservation", b =>
-                {
-                    b.HasOne("CineFlow.Domain.Entities.Schedule", "Schedule")
-                        .WithMany()
-                        .HasForeignKey("ScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Schedule");
                 });
 
             modelBuilder.Entity("CineFlow.Domain.Entities.Ticket", b =>

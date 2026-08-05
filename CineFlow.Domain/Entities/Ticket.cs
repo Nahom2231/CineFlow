@@ -8,8 +8,11 @@ public class Ticket
     
     public DateTime PurchasedAt { get; set; } = DateTime.UtcNow;
 
+    public bool IsUsed { get; set; } = false;
+    public DateTime? UsedAt { get; set; }
+
     public Guid ScheduleId { get; set; }
     public Schedule? Schedule { get; set; } 
     
-    public Guid UserId { get; set; }
+    public string UserId { get; set; }= string.Empty;
 }

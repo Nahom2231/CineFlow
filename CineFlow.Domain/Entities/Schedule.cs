@@ -3,12 +3,15 @@ namespace CineFlow.Domain.Entities;
 public class Schedule
 {
     public Guid Id { get; set;}
-    public DateTime ShowTime { get; set; }
-    public string CinemaBranch {get; set;} =string.Empty;
+    public DateTime Showtime { get; set; }
 
-    public string HallName {get; set; } =string.Empty;
+
+
     public decimal TicketPrice { get; set; }
     public int AvailableSeats { get; set; }
+     public uint RowVersion { get; set; }
+    public Guid CinemaHallId {get; set;}
+    public CinemaHall? CinemaHall {get; set;}
 
     public Guid MovieId { get; set; }
     public Movie? Movie { get; set; } 

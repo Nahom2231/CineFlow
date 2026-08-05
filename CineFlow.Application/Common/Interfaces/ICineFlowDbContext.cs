@@ -17,5 +17,9 @@ namespace CineFlow.Application.Common.Interfaces;
 
         DbSet <Ticket> Tickets {get;}
 
+        DbSet<CinemaHall> CinemaHalls {get;}
+
+        DbSet<SeatReservation> SeatReservations {get;}
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }

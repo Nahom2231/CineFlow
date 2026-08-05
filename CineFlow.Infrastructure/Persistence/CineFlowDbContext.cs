@@ -1,10 +1,14 @@
+using System.Reflection;
 using CineFlow.Application.Common.Interfaces;
 using CineFlow.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 
 namespace CineFlow.Infrastructure.Persistence;
 
-public class CineFlowDbContext : DbContext, ICineFlowDbContext
+public class CineFlowDbContext : IdentityDbContext<IdentityUser>, ICineFlowDbContext
 {
     public CineFlowDbContext(DbContextOptions<CineFlowDbContext> options) : base(options)
     {
@@ -19,21 +23,15 @@ public class CineFlowDbContext : DbContext, ICineFlowDbContext
 
     public DbSet<Ticket> Tickets =>Set<Ticket>();
 
+    public DbSet<CinemaHall> CinemaHalls =>Set<CinemaHall>();
+
+    public DbSet<SeatReservation> SeatReservations => Set<SeatReservation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Schedule>()
-        .Property(s=>s.TicketPrice)
-        .HasPrecision(18, 2);
-
-        modelBuilder.Entity<Ticket>()
-        .Property(t=> t.AmountPaid)
-        .HasPrecision(18, 2);
-
-        modelBuilder.Entity<Movie>()
-        .HasMany(m =>m.Stars)
-        .WithMany(s=>s.Movies);
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

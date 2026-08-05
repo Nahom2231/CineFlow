@@ -45,7 +45,7 @@ public class GetFilteredMoviesQueryHandler : IRequestHandler<GetFilteredMoviesQu
 
         if (!string.IsNullOrWhiteSpace(request.CinemaBranch))
         {
-            query = query.Where(m=>m.Schedules.Any(s=>s.CinemaBranch== request.CinemaBranch));
+            query = query.Where(m=>m.Schedules.Any(s=>s.CinemaHall!= null && s.CinemaHall.BranchName == request.CinemaBranch));
         }
     
         return await query.Select(m => new MovieDto
