@@ -9,9 +9,9 @@ public record GetFilteredMoviesQuery(
     string? SearchTitle,
     string? Genre,
     string ? AudioLanguage,
-    string? CinemaBranch) : IRequest<List<MovieDto>>;
+    string? CinemaBranch) : IRequest<List<MovieResponseDto>>;
 
-public class GetFilteredMoviesQueryHandler : IRequestHandler<GetFilteredMoviesQuery, List<MovieDto>>
+public class GetFilteredMoviesQueryHandler : IRequestHandler<GetFilteredMoviesQuery, List<MovieResponseDto>>
 {
     private readonly ICineFlowDbContext _context;
 
@@ -20,7 +20,7 @@ public class GetFilteredMoviesQueryHandler : IRequestHandler<GetFilteredMoviesQu
         _context = context;
     }
 
-    public async Task<List<MovieDto>> Handle(GetFilteredMoviesQuery request, CancellationToken cancellationToken)
+    public async Task<List<MovieResponseDto>> Handle(GetFilteredMoviesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Movies
         .Include(m => m.Director)
@@ -48,7 +48,7 @@ public class GetFilteredMoviesQueryHandler : IRequestHandler<GetFilteredMoviesQu
             query = query.Where(m=>m.Schedules.Any(s=>s.CinemaHall!= null && s.CinemaHall.BranchName == request.CinemaBranch));
         }
     
-        return await query.Select(m => new MovieDto
+        return await query.Select(m => new MovieResponseDto
         {
             Id=m.Id,
             TitleEnglish = m.TitleEnglish,
