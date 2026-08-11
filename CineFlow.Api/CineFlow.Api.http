@@ -1,6 +1,32 @@
 @CineFlow.Api_HostAddress = http://localhost:5066
 
-GET {{CineFlow.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+
 
 ###
+
+POST http://localhost:5066/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "your_email@example.com",
+  "password": "your_password"
+}
+###
+POST http://localhost:5066/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Password123!",
+  "fullName": "Test User"
+}
+
+###
+
+POST http://localhost:5066/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Password123!"
+}
