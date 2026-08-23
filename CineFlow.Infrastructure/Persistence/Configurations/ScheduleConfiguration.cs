@@ -28,7 +28,7 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<Schedule>
             .IsRowVersion();
 
         builder.HasOne(s => s.CinemaHall)
-              .WithMany(h=> h.Schedule)
+              .WithMany(h=> h.Schedules)
               .HasForeignKey(s=> s.CinemaHallId)
               .OnDelete(DeleteBehavior.Restrict);
 

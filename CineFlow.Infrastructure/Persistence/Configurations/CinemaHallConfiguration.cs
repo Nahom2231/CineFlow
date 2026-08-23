@@ -23,7 +23,7 @@ public class CinemaHallConfiguration: IEntityTypeConfiguration<CinemaHall>{
         builder.Property(h=>h.SeatMapMatrixJson)
         .HasColumnType("jsonb");
     
-        builder.HasMany(h => h.Schedule)
+        builder.HasMany(h => h.Schedules)
             .WithOne(s => s.CinemaHall)
             .HasForeignKey(s => s.CinemaHallId)
             .OnDelete(DeleteBehavior.Restrict);

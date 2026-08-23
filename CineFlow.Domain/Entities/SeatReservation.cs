@@ -5,7 +5,7 @@ public class SeatReservation
 {
     public Guid Id {get; set;}
     public Guid ScheduleId {get; set;}
-    public Schedule Schedule {get; set;} = null;
+    public Schedule Schedule {get; set;} = null!;
     
     public string SeatNumber {get; set;}= string.Empty;
     public string UserId {get; set;}= string.Empty;

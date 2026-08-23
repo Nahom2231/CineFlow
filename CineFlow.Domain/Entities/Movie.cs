@@ -14,7 +14,7 @@ public class Movie
     public string FeaturedImageUrl { get; set; } = string.Empty;
     public List<string> GalleryImageUrls { get; set; } = new();
 
-    public Guid DirectorId { get; set; }
+    public Guid ? DirectorId { get; set; }
     public Director? Director { get; set; }
 
     public ICollection<Star> Stars { get; set; } = new List<Star>();

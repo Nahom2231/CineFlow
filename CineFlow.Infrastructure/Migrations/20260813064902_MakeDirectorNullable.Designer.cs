@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CineFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CineFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(CineFlowDbContext))]
-    partial class CineFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260813064902_MakeDirectorNullable")]
+    partial class MakeDirectorNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
