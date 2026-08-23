@@ -11,7 +11,8 @@ public record BookTicketCommand(
     string SeatNumber,
     string PaymentPhoneNumber,
     string PaymentProvider,
-    string UserId) : IRequest<Guid>;
+    string? UserId 
+    ) : IRequest<Guid>;
 
     public class BookTicketCommandHandler : IRequestHandler<BookTicketCommand, Guid>
 {
@@ -55,9 +56,10 @@ public record BookTicketCommand(
         ScheduleId= schedule.Id,
         SeatNumber = request.SeatNumber,
         AmountPaid = schedule.TicketPrice,
-        MockTransactionReference= mockTxnRef,
+        MockTransactionReference = $"Txn-{request.PaymentProvider? .ToUpper() ?? "PAYMENT"} -{Random.Shared.Next(100000, 999999)}",
+        IsUsed = false,
         PurchasedAt = DateTime.UtcNow,
-        UserId= request.UserId
+        UserId = request.UserId ?? string.Empty
     };
    var activeHold = await _context.SeatReservations.FirstOrDefaultAsync(r =>
    r.ScheduleId ==request.ScheduleId&&

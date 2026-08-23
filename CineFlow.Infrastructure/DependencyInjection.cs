@@ -21,32 +21,42 @@ public static class DependencyInjection
         options.UseNpgsql(connectionString));
         services.AddScoped<ICineFlowDbContext>(provider =>provider.GetRequiredService<CineFlowDbContext>());
          services.AddScoped<IFileStorageService, LocalFileStorageService>();
+         services.AddScoped<IQRCodeService, QRCodeService>();
          services.AddHostedService<ExpiredReservationCleanupWorker>();
          services.AddIdentity<IdentityUser, IdentityRole>(options =>
          {
-             options.Password.RequireDigit =true;
-             options.Password.RequiredLength =6;
+             options.Password.RequireDigit = true;
+             options.Password.RequiredLength = 6;
              options.Password.RequireUppercase = false;
+             options.Password.RequireLowercase = false;
+             options.Password.RequireNonAlphanumeric = false;
+             options.User.RequireUniqueEmail = true;
+
+             // Account lockout configuration (5 failed attempts -> 60s cooldown rate limit)
+             options.Lockout.AllowedForNewUsers = true;
+             options.Lockout.MaxFailedAccessAttempts = 5;
+             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromSeconds(60);
          })
          .AddEntityFrameworkStores<CineFlowDbContext>()
          .AddDefaultTokenProviders();
-         var jwtSettings= configuration.GetSection("JwtSettings");
-         var secretKey= jwtSettings["Secret"]?? "SuperSecretCinemaKeyThatIsVeryLongAndSecure123";
+         var jwtSettings = configuration.GetSection("JwtSettings");
+         var secretKey = jwtSettings["Secret"] ?? "SuperSecretCinemaKeyThatIsVeryLongAndSecure123";
          services.AddAuthentication(options =>
          {
-             options.DefaultAuthenticateScheme =JwtBearerDefaults.AuthenticationScheme;
+             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
              options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
          })
          .AddJwtBearer(options =>
          {
              options.TokenValidationParameters = new TokenValidationParameters
              {
-                 ValidateIssuer= true,
+                 ValidateIssuer = true,
                  ValidateAudience = true,
-                 ValidateLifetime =true,
-                 ValidateIssuerSigningKey=true,
-                 ValidIssuer = jwtSettings["Audience"],
-                 IssuerSigningKey =new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                 ValidateLifetime = true,
+                 ValidateIssuerSigningKey = true,
+                 ValidIssuer = jwtSettings["Issuer"],
+                 ValidAudience = jwtSettings["Audience"],
+                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
              };
          });
         return services;
