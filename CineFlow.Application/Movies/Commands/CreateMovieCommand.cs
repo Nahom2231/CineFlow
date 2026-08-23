@@ -6,23 +6,26 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using MediatR;
+using System.IO;
 
 namespace CineFlow.Application.Movies.Commands;
 
 public record CreateMovieCommand(
     string TitleEnglish,
-    string TitleAmharic,
+    string? TitleAmharic,
     string DescriptionEnglish,
-    string DescriptionAmharic,
+    string? DescriptionAmharic,
     int DurationMinutes,
     string Genre,
     string AudioLanguage,
-    Guid DirectorId,
-    List<Guid> StarIds,
-    Stream FeaturedImage,
-    List<Stream> GalleryImages);
+    Guid? DirectorId,
+    List<Guid>? StarIds,
+    String? FeaturedImage,
+    List<Stream>? GalleryImages
+    ): IRequest<Guid> ;
 
-public class CreateMovieCommandHandler
+public class CreateMovieCommandHandler : IRequestHandler<CreateMovieCommand, Guid>
 {
     private readonly ICineFlowDbContext _context;
     private readonly IFileStorageService _fileStorage;
@@ -36,31 +39,46 @@ public class CreateMovieCommandHandler
 
     public async Task<Guid> Handle(CreateMovieCommand request,  CancellationToken cancellationToken)
     {
-        var featuredUrl = await _fileStorage.SaveFileAsync(request.FeaturedImage, "movies/thumbnails", Guid.NewGuid().ToString(), cancellationToken);
-        var galleryUrls = new List <string> ();
+        string featuredUrl = request.FeaturedImage ?? string.Empty;
 
-        if(request.GalleryImages != null && request.GalleryImages.Any())
+    // 2. Handle GalleryImages
+    var galleryUrls = new List<string>();
+    if (request.GalleryImages != null && request.GalleryImages.Count > 0)
+    {
+        foreach (var fileStream in request.GalleryImages)
         {
-            foreach (var file in request.GalleryImages)
+            if (fileStream != null)
             {
-                var url = await _fileStorage.SaveFileAsync(file, "movies/gallery", Guid.NewGuid().ToString(), cancellationToken);
-                if(!string.IsNullOrEmpty(url))
+                var url = await _fileStorage.SaveFileAsync(
+                    fileStream, 
+                    "movies/gallery", 
+                    Guid.NewGuid().ToString(), 
+                    cancellationToken
+                );
+
+                if (!string.IsNullOrEmpty(url))
                 {
                     galleryUrls.Add(url);
                 }
             }
         }
+    }
+        var starIds= request.StarIds?? new List<Guid>();
         var stars = await _context.Stars
-        .Where(s => request.StarIds.Contains(s.Id))
+        .Where(s => starIds.Contains(s.Id))
         .ToListAsync(cancellationToken);
 
         var movie = new Movie
         {
             Id = Guid.NewGuid(),
             TitleEnglish = request.TitleEnglish,
-            TitleAmharic = request.TitleAmharic,
-            DescriptionEnglish = request.DescriptionEnglish,
-            DescriptionAmharic = request.DescriptionAmharic, 
+            TitleAmharic = string.IsNullOrWhiteSpace(request.TitleAmharic) 
+              ? request.TitleEnglish 
+              : request.TitleAmharic,
+              DescriptionEnglish = request.DescriptionEnglish,
+              DescriptionAmharic = string.IsNullOrWhiteSpace(request.DescriptionAmharic) 
+            ? request.DescriptionEnglish 
+            : request.DescriptionAmharic,
             DurationMinutes = request.DurationMinutes,
             Genre =request.Genre,
             AudioLanguage = request.AudioLanguage,
