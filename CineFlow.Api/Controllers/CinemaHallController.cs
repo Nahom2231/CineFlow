@@ -1,0 +1,84 @@
+using CineFlow.Application.Common.Interfaces;
+using CineFlow.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace CineFlow.Api.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+public class CinemaHallController : ControllerBase
+{
+    private readonly ICineFlowDbContext _context;
+
+    public CinemaHallController(ICineFlowDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    {
+        var halls = await _context.CinemaHalls
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+        return Ok(halls);
+    }
+
+    [HttpGet("{id:guid}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var hall = await _context.CinemaHalls
+            .AsNoTracking()
+            .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+
+        if (hall == null) return NotFound(new { Message = "Cinema hall not found" });
+        return Ok(hall);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create([FromBody] CinemaHall hall, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(hall.HallName))
+        {
+            return BadRequest(new { Message = "Hall name is required." });
+        }
+
+        hall.Id = Guid.NewGuid();
+        _context.CinemaHalls.Add(hall);
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(new { hall.Id, Message = "Cinema hall created successfully!" });
+    }
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] CinemaHall hall, CancellationToken cancellationToken)
+    {
+        var existing = await _context.CinemaHalls.FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+        if (existing == null) return NotFound(new { Message = "Cinema hall not found" });
+
+        existing.BranchName = hall.BranchName;
+        existing.HallName = hall.HallName;
+        existing.TotalCapacity = hall.TotalCapacity;
+        existing.SeatMapMatrixJson = hall.SeatMapMatrixJson;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(new { Message = "Cinema hall updated successfully!" });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var hall = await _context.CinemaHalls.FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+        if (hall == null) return NotFound(new { Message = "Cinema hall not found" });
+
+        _context.CinemaHalls.Remove(hall);
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(new { Message = "Cinema hall deleted successfully!" });
+    }
+}
