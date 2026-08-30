@@ -26,6 +26,6 @@ public class CinemaHallConfiguration: IEntityTypeConfiguration<CinemaHall>{
         builder.HasMany(h => h.Schedules)
             .WithOne(s => s.CinemaHall)
             .HasForeignKey(s => s.CinemaHallId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
