@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CIneFlow.Application;
+namespace CineFlow.Application;
 
 public static class DependencyInjection
 {
