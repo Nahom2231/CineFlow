@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using System.Text;
+using System.Security.Claims;
 namespace CineFlow.Infrastructure;
 
 public static class DependencyInjection
@@ -40,7 +41,7 @@ public static class DependencyInjection
          .AddEntityFrameworkStores<CineFlowDbContext>()
          .AddDefaultTokenProviders();
          var jwtSettings = configuration.GetSection("JwtSettings");
-         var secretKey = jwtSettings["Secret"] ?? "SuperSecretCinemaKeyThatIsVeryLongAndSecure123";
+         var secretKey = jwtSettings["Secret"] ?? "CineFlowSuperSecureEnterpriseTokenSigningPrivateKey2026";
          services.AddAuthentication(options =>
          {
              options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -48,15 +49,20 @@ public static class DependencyInjection
          })
          .AddJwtBearer(options =>
          {
+             options.RequireHttpsMetadata = false;
+             options.SaveToken = true;
              options.TokenValidationParameters = new TokenValidationParameters
              {
                  ValidateIssuer = true,
                  ValidateAudience = true,
                  ValidateLifetime = true,
                  ValidateIssuerSigningKey = true,
-                 ValidIssuer = jwtSettings["Issuer"],
-                 ValidAudience = jwtSettings["Audience"],
-                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                 ValidIssuer = jwtSettings["Issuer"] ?? "CineFlowApi",
+                 ValidAudience = jwtSettings["Audience"] ?? "CineFlowAngularClient",
+                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                 RoleClaimType = ClaimTypes.Role,
+                 NameClaimType = ClaimTypes.Name,
+                 ClockSkew = TimeSpan.FromMinutes(5)
              };
          });
         return services;
