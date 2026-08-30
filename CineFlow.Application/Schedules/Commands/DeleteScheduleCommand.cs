@@ -23,7 +23,14 @@ public class DeleteScheduleCommandHandler : IRequestHandler<DeleteScheduleComman
 
         if (schedule == null) return false;
 
-        // If tickets are already booked, we could either cancel or disallow
+        var reservations = await _context.SeatReservations
+            .Where(r => r.ScheduleId == request.Id)
+            .ToListAsync(cancellationToken);
+        if (reservations.Any())
+        {
+            _context.SeatReservations.RemoveRange(reservations);
+        }
+
         _context.Schedules.Remove(schedule);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
