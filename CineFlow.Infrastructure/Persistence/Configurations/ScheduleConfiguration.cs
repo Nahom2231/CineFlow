@@ -30,7 +30,7 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<Schedule>
         builder.HasOne(s => s.CinemaHall)
               .WithMany(h=> h.Schedules)
               .HasForeignKey(s=> s.CinemaHallId)
-              .OnDelete(DeleteBehavior.Restrict);
+              .OnDelete(DeleteBehavior.Cascade);
 
         
         builder.HasOne(s => s.Movie)
