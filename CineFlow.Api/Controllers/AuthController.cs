@@ -99,9 +99,7 @@ public class AuthController : ControllerBase
             { 
                 Message = $"Account is temporarily locked due to 5 consecutive failed login attempts. Please wait {remainingSeconds} seconds before trying again.", 
                 IsLockedOut = true,
-                isLockedOut = true,
-                RemainingSeconds = remainingSeconds,
-                remainingSeconds = remainingSeconds
+                RemainingSeconds = remainingSeconds
             });
         }
 
@@ -118,9 +116,7 @@ public class AuthController : ControllerBase
                 { 
                     Message = "Account locked out due to 5 consecutive failed login attempts. Access is rate-limited for 60 seconds.", 
                     IsLockedOut = true,
-                    isLockedOut = true,
-                    RemainingSeconds = 60,
-                    remainingSeconds = 60
+                    RemainingSeconds = 60
                 });
             }
 
@@ -131,9 +127,7 @@ public class AuthController : ControllerBase
             { 
                 Message = $"Invalid email or password. You have {remainingAttempts} attempt(s) remaining before a 60-second security lockout.",
                 FailedAttempts = failedCount,
-                failedAttempts = failedCount,
-                RemainingAttempts = remainingAttempts,
-                remainingAttempts = remainingAttempts
+                RemainingAttempts = remainingAttempts
             });
         }
 
@@ -153,19 +147,12 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             Token = tokenString,
-            token = tokenString,
             Expiration = expiration,
-            expiration = expiration,
             RefreshToken = refreshToken,
-            refreshToken = refreshToken,
             RefreshTokenExpiration = refreshExpiration.UtcDateTime,
-            refreshTokenExpiration = refreshExpiration.UtcDateTime,
             Email = user.Email,
-            email = user.Email,
             Roles = userRoles,
-            roles = userRoles,
-            UserId = user.Id,
-            userId = user.Id
+            UserId = user.Id
         });
     }
 
@@ -221,8 +208,7 @@ public class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status429TooManyRequests, new 
             { 
                 Message = "Account is currently locked out.",
-                IsLockedOut = true,
-                isLockedOut = true
+                IsLockedOut = true
             });
         }
 
@@ -260,19 +246,12 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             Token = newTokenString,
-            token = newTokenString,
             Expiration = newExpiration,
-            expiration = newExpiration,
             RefreshToken = newRefreshToken,
-            refreshToken = newRefreshToken,
             RefreshTokenExpiration = newRefreshExpiration.UtcDateTime,
-            refreshTokenExpiration = newRefreshExpiration.UtcDateTime,
             Email = user.Email,
-            email = user.Email,
             Roles = userRoles,
-            roles = userRoles,
-            UserId = user.Id,
-            userId = user.Id
+            UserId = user.Id
         });
     }
 
@@ -351,6 +330,7 @@ public class AuthController : ControllerBase
         foreach (var role in userRoles)
         {
             authClaims.Add(new Claim(ClaimTypes.Role, role));
+            authClaims.Add(new Claim("role", role));
         }
 
         var jwtSettings = _configuration.GetSection("JwtSettings");
