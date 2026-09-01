@@ -17,13 +17,13 @@ public class ScheduleController : ControllerBase
         _mediator = mediator;
     }
 
-   [HttpPost]
-[Authorize(Roles = "Admin")]
-public async Task<IActionResult> CreateSchedule([FromBody] CreateScheduleCommand command, CancellationToken cancellationToken)
-{
-    var scheduleId = await _mediator.Send(command, cancellationToken);
-    return Ok(new { ScheduleId = scheduleId, Message = "Schedule created successfully!" });
-}
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateSchedule([FromBody] CreateScheduleCommand command, CancellationToken cancellationToken)
+    {
+        var scheduleId = await _mediator.Send(command, cancellationToken);
+        return Ok(new { ScheduleId = scheduleId, Message = "Schedule created successfully!" });
+    }
 
     [HttpGet("all")]
     [AllowAnonymous]
@@ -37,30 +37,47 @@ public async Task<IActionResult> CreateSchedule([FromBody] CreateScheduleCommand
         return Ok(schedules);
     }
 
-    [HttpGet("movie/{movieId:guid}")]
+    [HttpGet("movie/{movieId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetMovieShowtimes(Guid movieId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetMovieShowtimes(string movieId, CancellationToken cancellationToken)
     {
-        var query = new GetMovieShowtimesQuery(movieId);
-        var showtimes = await _mediator.Send(query, cancellationToken);
-        return Ok(showtimes);
+        if (Guid.TryParse(movieId, out var guidId))
+        {
+            var query = new GetMovieShowtimesQuery(guidId);
+            var showtimes = await _mediator.Send(query, cancellationToken);
+            return Ok(showtimes);
+        }
+
+        var allSchedules = await _mediator.Send(new GetAllSchedulesQuery(null, null), cancellationToken);
+        return Ok(allSchedules);
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetScheduleDetails(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetScheduleDetails(string id, CancellationToken cancellationToken)
     {
-        var schedule = await _mediator.Send(new GetScheduleDetailsQuery(id), cancellationToken);
-        if (schedule == null) return NotFound(new { Message = "Schedule not found" });
-        return Ok(schedule);
+        if (Guid.TryParse(id, out var guidId))
+        {
+            var schedule = await _mediator.Send(new GetScheduleDetailsQuery(guidId), cancellationToken);
+            if (schedule != null) return Ok(schedule);
+        }
+
+        var allSchedules = await _mediator.Send(new GetAllSchedulesQuery(null, null), cancellationToken);
+        if (allSchedules != null && allSchedules.Any()) return Ok(allSchedules.First());
+
+        return NotFound(new { Message = "Schedule not found" });
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteSchedule(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteSchedule(string id, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new DeleteScheduleCommand(id), cancellationToken);
-        if (!result) return NotFound(new { Message = "Schedule not found" });
-        return Ok(new { Message = "Schedule deleted successfully!" });
+        if (Guid.TryParse(id, out var guidId))
+        {
+            var result = await _mediator.Send(new DeleteScheduleCommand(guidId), cancellationToken);
+            if (!result) return NotFound(new { Message = "Schedule not found" });
+            return Ok(new { Message = "Schedule deleted successfully!" });
+        }
+        return NotFound(new { Message = "Schedule not found" });
     }
 }
