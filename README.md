@@ -1,216 +1,172 @@
-# 🎬 CineFlow API — Cinema Booking & Management System
+# CineFlow - Premier Cinema Ticketing & Reservation Backend API
 
-[![.NET Version](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Web%20API-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://learn.microsoft.com/aspnet/core)
-[![Entity Framework Core](https://img.shields.io/badge/EF%20Core-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.npgsql.org/efcore/)
-[![Authentication](https://img.shields.io/badge/Auth-JWT%20%2B%20Identity-black?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
-[![Payment Gateway](https://img.shields.io/badge/Payment-Chapa%20API-00C853?style=for-the-badge)](https://chapa.co/)
-[![Swagger Documentation](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![C# 13](https://img.shields.io/badge/C%23-13.0-239120?logo=c-sharp&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-4169E1?logo=postgresql&logoColor=white)
+![Entity Framework Core](https://img.shields.io/badge/EF%20Core-10.0-512BD4)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-**CineFlow API** is an enterprise-grade cinema management and online movie ticket reservation backend built with **.NET 10**, **ASP.NET Core Web API**, and **Clean Architecture**. It features secure authentication, interactive seat reservations with automated expiration handling, seamless **Chapa** payment gateway integration, and digital QR-code ticket issuance.
-
----
-
-## 🏗 Architecture Overview
-
-CineFlow follows the principles of **Clean Architecture** and **Domain-Driven Design (DDD)**, dividing concerns into distinct layers:
-
-```mermaid
-graph TD
-    API[CineFlow.Api<br/>Controllers, Middlewares, Swagger, DI Setup] --> Application[CineFlow.Application<br/>Commands, Queries, DTOs, Interfaces, Validators]
-    API --> Infrastructure[CineFlow.Infrastructure<br/>EF Core, Identity, PostgreSQL, Chapa, QR Code, Background Workers]
-    Infrastructure --> Application
-    Application --> Domain[CineFlow.Domain<br/>Entities, Enums, Value Objects, Core Business Logic]
-    Infrastructure --> Domain
-```
-
-- **`CineFlow.Domain`**: Core enterprise business logic and entities (`Movie`, `CinemaHall`, `Schedule`, `Ticket`, `SeatReservation`, `Director`, `Star`). Zero external dependencies.
-- **`CineFlow.Application`**: Business rules, CQRS commands/queries, application service interfaces (`IPaymentService`, `IEncryptionService`), DTOs, and mapping logic.
-- **`CineFlow.Infrastructure`**: Persistence layer using EF Core & PostgreSQL, ASP.NET Core Identity store, Chapa payment client, QR code generator, data encryption, and background cleanup workers.
-- **`CineFlow.Api`**: Presentation layer containing RESTful controllers, JWT authentication filters, CORS policies, Swagger/OpenAPI configuration, and dependency injection wiring.
+**CineFlow API** is an enterprise-grade RESTful Web API built with **.NET 10** and **Clean Architecture**. It powers the **CineFlow Cinema & Ticketing Platform**, providing real-time movie catalog management, multi-hall screening scheduling, seat selection matrices, background reservation cleanup, QR ticket generation, and real-time payment clearance via the **Chapa Ethiopian Payment Gateway**.
 
 ---
 
-## ✨ Key Features
+## ?? Architectural Overview & Key Capabilities
 
-- **🔐 Authentication & Security**:
-  - ASP.NET Core Identity with role-based access control (`Admin` vs `User`).
-  - Secure JWT Bearer authentication tokens.
-  - Account lockout protection against brute-force attacks.
-  - AES payload encryption service for sensitive data transmission.
-
-- **🎥 Movie & Catalog Management**:
-  - Full CRUD operations for movies, genres, release dates, durations, and ratings.
-  - Cast and crew tracking (Directors and Stars).
-  - Local file storage integration for movie poster uploads and media assets.
-
-- **🏛 Cinema Hall & Schedule Management**:
-  - Hall layout configuration and capacity management.
-  - Dynamic scheduling and screening showtimes linked to specific halls.
-
-- **🎟 Real-Time Seat Reservation Engine**:
-  - Interactive seat selection and reservation locking mechanism.
-  - **Background Worker (`ExpiredReservationCleanupWorker`)**: Automatically detects and releases unconfirmed/unpaid seat reservations after timeout.
-
-- **💳 Payment Gateway Integration (Chapa)**:
-  - Integration with Chapa payment API for processing payments in Ethiopian Birr (ETB).
-  - Webhook verification, payment status checks, and transaction callback handling.
-
-- **📲 Digital Ticket & QR Code Issuance**:
-  - Automatic digital ticket generation upon verified payment.
-  - Built-in QR Code generation service for contactless gate verification.
-
-- **📊 Admin Analytics & Dashboard**:
-  - Real-time revenue metrics, ticket sales volume, screening statistics, and occupancy analytics.
+- **Clean Architecture & CQRS Pattern**: Decoupled domain models, application business logic using MediatR CQRS, infrastructure services, and presentation controllers.
+- **Movie Catalog & Metadata Engine**: Complete movie management supporting multi-language metadata (English & Amharic), director/cast tracking, and flexible ID/slug resolution.
+- **Auditorium & Seat Matrix Management**: Interactive seating layouts for Standard & VIP Recliner lounges with real-time seat lock and reservation handling.
+- **Chapa Ethiopian Payment Gateway**: Instant transaction initialization, web checkout redirection, payment verification, and webhook notifications for Telebirr, CBE Birr, Awash Birr, and Card payments.
+- **Background Reservation Cleanup Worker**: Hosted background worker (ExpiredReservationCleanupWorker) that automatically releases unpaid/unconfirmed seat holds after timeout.
+- **Digital Tickets & Contactless QR Pass**: Automatic ticket generation and QR Code SVG/PNG rendering for fast contactless venue verification.
+- **Identity & Security**: ASP.NET Core Identity with JWT Bearer Token authentication, role-based authorization (Admin vs Customer), account lockout protection, and AES data payload encryption.
 
 ---
 
-## 🛠 Tech Stack
+## ??? Tech Stack & Dependencies
 
-| Component | Technology / Library |
+| Layer | Technologies / Libraries |
 | :--- | :--- |
-| **Framework** | .NET 10 / ASP.NET Core Web API |
-| **Language** | C# 13 |
-| **Architecture** | Clean Architecture / CQRS pattern |
-| **ORM** | Entity Framework Core (Npgsql PostgreSQL Provider) |
-| **Database** | PostgreSQL |
-| **Authentication** | ASP.NET Core Identity + JWT Bearer Tokens |
-| **Payment Gateway** | Chapa API |
-| **Background Processing** | `IHostedService` Background Workers |
-| **Documentation** | Swagger / OpenAPI with JWT Bearer support |
-| **Utilities** | QRCoder (QR generation), BCrypt / AES (Security) |
+| **Framework & Runtime** | .NET 10.0 Web API, C# 13 |
+| **Architecture** | Clean Architecture, CQRS (MediatR), Repository Pattern |
+| **Database & ORM** | PostgreSQL, Entity Framework Core 10 (Npgsql Provider) |
+| **Authentication & AuthZ** | ASP.NET Core Identity, JWT Bearer Tokens, Custom Authorization Policies |
+| **Payments** | Chapa API (pi.chapa.co), Multi-Bank Clearance |
+| **Real-time Broadcast** | ASP.NET Core SignalR Hubs (TmsHub) |
+| **Background Processing** | IHostedService Background Service Workers |
+| **API Reference & OpenAPI** | Scalar API Reference, OpenAPI / Swagger UI |
+| **Security & Utilities** | AES Payload Encryption Service, QRCoder SVG Generator |
 
 ---
 
-## 📁 Solution Structure
+## ?? Project Structure
 
-```
+`
 CineFlow/
-├── CineFlow.Api/                    # API Entry point & REST controllers
-│   ├── Controllers/                 # Admin, Auth, CinemaHall, Movies, Payment, Schedule, Tickets
-│   ├── appsettings.json             # Configuration (DB, JWT, Chapa, Encryption)
-│   └── Program.cs                   # Application pipeline & DI container
-├── CineFlow.Application/            # Application business logic layer
-│   ├── Common/                      # Interfaces, exceptions, helpers
-│   ├── Configuration/               # Options classes (ChapaOptions, EncryptionOptions)
-│   ├── Interfaces/                  # IPaymentService, IEncryptionService, etc.
-│   ├── Movies/                      # Movie commands, queries & handlers
-│   └── Schedules/                   # Schedule commands, queries & handlers
-├── CineFlow.Domain/                 # Enterprise domain models
-│   └── Entities/                    # Movie, CinemaHall, Schedule, Ticket, SeatReservation, etc.
-├── CineFlow.Infrastructure/         # External integrations & persistence
-│   ├── Persistence/                 # EF Core DbContext, entity configurations, migrations
-│   ├── Payments/                    # Chapa payment gateway implementation
-│   ├── Security/                    # AES encryption and token utilities
-│   ├── Services/                    # QR code generator, file storage, background workers
-│   └── DependencyInjection.cs       # Infrastructure service registrations
-└── CineFlow.slnx                    # Solution file
-```
++-- CineFlow.Api/                    # Presentation Layer (Controllers, Middleware, Program.cs)
+�   +-- Controllers/                 # MoviesController, ScheduleController, CinemaHallController, PaymentController, TicketsController, AuthController
+�   +-- Properties/                  # launchSettings.json (Port 5066 HTTP)
+�   +-- appsettings.json             # DB connection strings, JWT, Chapa & Encryption settings
++-- CineFlow.Application/            # Application Logic Layer (CQRS Commands, Queries, Interfaces, DTOs)
+�   +-- Interfaces/                  # IPaymentService, IEncryptionService, ICineFlowDbContext
+�   +-- Movies/                      # Movie CQRS Commands & Queries
+�   +-- Schedules/                   # Schedule CQRS Commands & Queries
+�   +-- Configuration/               # Options Pattern (ChapaOptions, EncryptionOptions)
++-- CineFlow.Domain/                 # Core Domain Layer (Entities, Enums, Value Objects)
+�   +-- Entities/                    # Movie, CinemaHall, Schedule, Ticket, SeatReservation, Director, Star
++-- CineFlow.Infrastructure/         # Infrastructure & Persistence Layer
+    +-- Persistence/                 # EF Core DbContext, Entity Configurations, Migrations
+    +-- Payments/                    # ChapaPaymentService Implementation
+    +-- Security/                    # EncryptionService (AES)
+    +-- Services/                    # QR Code Service, Background Workers
+`
 
 ---
 
-## 🚀 Getting Started
+## ?? Configuration & Environment Setup
 
-### Prerequisites
+### 1. Database Connection (ppsettings.json)
+Configure your PostgreSQL database connection string in CineFlow.Api/appsettings.json:
 
-Ensure you have the following installed on your machine:
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download)
-- [PostgreSQL Database Server](https://www.postgresql.org/)
-- [Git](https://git-scm.com/)
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Nahom2231/CineFlow.git
-cd CineFlow
-```
-
-### 2. Configure `appsettings.json`
-
-Create or update `CineFlow.Api/appsettings.json` (or `appsettings.Development.json`):
-
-```json
+`json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=CineFlowDb;Username=postgres;Password=your_password;"
+    "DefaultConnection": "Host=localhost;Database=CineFlowDb;Username=postgres;Password=your_password"
   },
   "JwtSettings": {
-    "Secret": "YourSuperSecretJWTKeyWithAtLeast32CharactersLong!",
+    "Secret": "CineFlowSuperSecureEnterpriseTokenSigningPrivateKey2026",
     "Issuer": "CineFlowApi",
-    "Audience": "CineFlowClient",
-    "ExpiryInMinutes": 120
+    "Audience": "CineFlowAngularClient",
+    "ExpiryMinutes": 120
   },
-  "ChapaOptions": {
+  "Chapa": {
     "SecretKey": "CHASECK_TEST-xxxxxxxxxxxxxxxxxxxx",
-    "BaseUrl": "https://api.chapa.co/v1/"
+    "PublicKey": "CHAPUBK_TEST-xxxxxxxxxxxxxxxxxxxx",
+    "BaseUrl": "https://api.chapa.co",
+    "CallbackUrl": "http://localhost:5066/api/v1/payment/callback"
   },
-  "EncryptionOptions": {
-    "Key": "your-32-character-encryption-key!",
-    "IV": "your-16-byte-iv!"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
+  "Encryption": {
+    "Key": "CineFlowSecretEncryptionKey32Byte",
+    "IV": "CineFlowSecretIV"
   }
 }
-```
+`
 
-### 3. Run Database Migrations
+---
 
-Apply Entity Framework Core migrations to your PostgreSQL database:
+## ?? Installation & Running Locally
 
-```bash
+### Prerequisites
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) installed
+- [PostgreSQL Database Server](https://www.postgresql.org/download/) running on localhost:5432
+
+### 1. Clone the Repository
+`ash
+git clone https://github.com/Nahom2231/CineFlow.git
+cd CineFlow
+`
+
+### 2. Apply Database Migrations
+`ash
 dotnet ef database update --project CineFlow.Infrastructure --startup-project CineFlow.Api
-```
+`
 
-### 4. Run the Application
+### 3. Run the API Server
+`ash
+dotnet run --project CineFlow.Api/CineFlow.Api.csproj --launch-profile http
+`
 
-```bash
-dotnet run --project CineFlow.Api
-```
+The API will start listening on **http://localhost:5066**.
 
-Once running, access Swagger API documentation at:
-- **Swagger UI**: `http://localhost:5000/swagger` or `https://localhost:5001/swagger`
-
----
-
-## 📡 API Endpoints Overview
-
-| Controller | Route | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| **Auth** | `POST /api/auth/register` | Register a new customer account | No |
-| **Auth** | `POST /api/auth/login` | Authenticate user & receive JWT token | No |
-| **Movies** | `GET /api/movies` | Get all currently showing & upcoming movies | No |
-| **Movies** | `GET /api/movies/{id}` | Get detailed movie metadata and cast | No |
-| **Movies** | `POST /api/movies` | Add a new movie (with poster upload) | Admin |
-| **Cinema Halls** | `GET /api/cinemahall` | Retrieve all cinema halls and seat layouts | No |
-| **Schedules** | `GET /api/schedule` | Retrieve movie screening schedules | No |
-| **Schedules** | `POST /api/schedule` | Schedule a new screening time | Admin |
-| **Payments** | `POST /api/payment/initialize` | Initialize Chapa checkout for reserved seats | User |
-| **Payments** | `GET /api/payment/verify/{txRef}` | Verify transaction status with Chapa | User |
-| **Tickets** | `GET /api/tickets/my-tickets` | List user's booked tickets | User |
-| **Tickets** | `GET /api/tickets/{id}/qr` | Retrieve ticket verification QR code | User |
-| **Admin** | `GET /api/admin/dashboard` | Fetch platform revenue, bookings & analytics | Admin |
+### 4. Interactive API Documentation
+Access the interactive OpenAPI & Scalar documentation in your browser at:
+- **Scalar API Reference**: http://localhost:5066/scalar/v1
+- **OpenAPI Json**: http://localhost:5066/openapi/v1.json
+- **Swagger UI**: http://localhost:5066/swagger
 
 ---
 
-## 🔒 Security Best Practices
+## ?? Key API Endpoints Reference
 
-- **Token Protection**: JWTs are signed with HMAC-SHA256 and verified for issuer, audience, and lifetime.
-- **Sensitive Fields**: Sensitive payload fields are encrypted using AES before transit.
-- **CORS Configured**: CORS policies restrict API access to trusted frontend origins (Angular, React, Vue).
-- **Seat Race Condition Prevention**: Background lock & transactional reservation prevent double booking.
+### ?? Movies Endpoint
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| GET | /api/v1/Movies | Public | List all movies with optional genre/title/audio filters |
+| GET | /api/v1/Movies/{id} | Public | Get movie details by GUID or slug identifier (e.g. m6-batman) |
+| POST | /api/v1/Movies | Admin | Create a new movie entry with poster upload |
+| DELETE | /api/v1/Movies/{id} | Admin | Remove a movie from the catalog |
+
+### ??? Cinema Halls & Showtimes
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| GET | /api/v1/CinemaHall | Public | List all cinema auditoriums & seating capacity |
+| GET | /api/v1/CinemaHall/{id} | Public | Get auditorium details and seat matrix |
+| GET | /api/v1/Schedule/all | Public | Retrieve all screening showtimes |
+| GET | /api/v1/Schedule/movie/{movieId}| Public | Get active showtimes for a specific movie |
+| POST | /api/v1/Schedule | Admin | Create a new movie screening schedule |
+
+### ?? Chapa Payment Gateway
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| GET | /api/v1/Payment/config | Public | Get public payment gateway configuration |
+| POST | /api/v1/Payment/initialize | Public | Initialize Chapa transaction and get hosted checkout URL |
+| GET | /api/v1/Payment/verify/{reference} | Public | Verify payment transaction status |
+| POST | /api/v1/Payment/callback | Webhook | Process Chapa transaction status webhooks |
+
+### ??? Tickets & Booking
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| GET | /api/v1/Tickets/{scheduleId}/seats | Public | Get real-time seat availability for showtime |
+| POST | /api/v1/Tickets/book | User | Reserve selected seats and issue digital ticket |
+| GET | /api/v1/Tickets/{ticketId} | User | Retrieve digital ticket details and QR code SVG |
 
 ---
 
-## 👨‍💻 Author
+## ????? Author & Contribution
 
-- **Nahom** — [@Nahom2231](https://github.com/Nahom2231)
+Developed and maintained by **Nahom** ([@Nahom2231](https://github.com/Nahom2231)).
 
 ---
 
-## 📄 License
+## ?? License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE).
