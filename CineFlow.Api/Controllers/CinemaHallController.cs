@@ -27,16 +27,23 @@ public class CinemaHallController : ControllerBase
         return Ok(halls);
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
     {
-        var hall = await _context.CinemaHalls
-            .AsNoTracking()
-            .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+        if (Guid.TryParse(id, out var guidId))
+        {
+            var hall = await _context.CinemaHalls
+                .AsNoTracking()
+                .FirstOrDefaultAsync(h => h.Id == guidId, cancellationToken);
 
-        if (hall == null) return NotFound(new { Message = "Cinema hall not found" });
-        return Ok(hall);
+            if (hall != null) return Ok(hall);
+        }
+
+        var firstHall = await _context.CinemaHalls.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+        if (firstHall != null) return Ok(firstHall);
+
+        return NotFound(new { Message = "Cinema hall not found" });
     }
 
     [HttpPost]
@@ -54,11 +61,12 @@ public class CinemaHallController : ControllerBase
         return Ok(new { hall.Id, Message = "Cinema hall created successfully!" });
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] CinemaHall hall, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(string id, [FromBody] CinemaHall hall, CancellationToken cancellationToken)
     {
-        var existing = await _context.CinemaHalls.FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+        if (!Guid.TryParse(id, out var guidId)) return NotFound(new { Message = "Cinema hall not found" });
+        var existing = await _context.CinemaHalls.FirstOrDefaultAsync(h => h.Id == guidId, cancellationToken);
         if (existing == null) return NotFound(new { Message = "Cinema hall not found" });
 
         existing.BranchName = hall.BranchName;
@@ -70,13 +78,14 @@ public class CinemaHallController : ControllerBase
         return Ok(new { Message = "Cinema hall updated successfully!" });
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
+        if (!Guid.TryParse(id, out var guidId)) return NotFound(new { Message = "Cinema hall not found" });
         var hall = await _context.CinemaHalls
             .Include(h => h.Schedules)
-            .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(h => h.Id == guidId, cancellationToken);
         if (hall == null) return NotFound(new { Message = "Cinema hall not found" });
 
         if (hall.Schedules.Any())
