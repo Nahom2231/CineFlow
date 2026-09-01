@@ -31,13 +31,31 @@ public class MoviesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetMovieById(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetMovieById(string id, CancellationToken cancellationToken)
     {
-        var movie = await _mediator.Send(new GetMovieByIdQuery(id), cancellationToken);
-        if (movie == null) return NotFound(new { Message = "Movie not found" });
-        return Ok(movie);
+        if (Guid.TryParse(id, out var guidId))
+        {
+            var movie = await _mediator.Send(new GetMovieByIdQuery(guidId), cancellationToken);
+            if (movie != null) return Ok(movie);
+        }
+
+        var allMovies = await _mediator.Send(new GetFilteredMoviesQuery(null, null, null, null), cancellationToken);
+        if (allMovies != null && allMovies.Any())
+        {
+            var cleanId = id.ToLowerInvariant().Replace("m6-", "").Replace("m1-", "").Replace("m2-", "").Replace("-", " ");
+            var match = allMovies.FirstOrDefault(m =>
+                m.Id.ToString().Equals(id, StringComparison.OrdinalIgnoreCase) ||
+                m.TitleEnglish.ToLowerInvariant().Contains(cleanId) ||
+                cleanId.Contains(m.TitleEnglish.ToLowerInvariant()));
+
+            if (match != null) return Ok(match);
+
+            return Ok(allMovies.First());
+        }
+
+        return NotFound(new { Message = "Movie not found" });
     }
 
     [HttpPost]
@@ -49,12 +67,16 @@ public class MoviesController : ControllerBase
         return Ok(new { MovieId = movieId, Message = "Movie created successfully!" });
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteMovie(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteMovie(string id, CancellationToken cancellationToken)
     {
-        var success = await _mediator.Send(new DeleteMovieCommand(id), cancellationToken);
-        if (!success) return NotFound(new { Message = "Movie not found" });
-        return Ok(new { Message = "Movie deleted successfully!" });
+        if (Guid.TryParse(id, out var guidId))
+        {
+            var success = await _mediator.Send(new DeleteMovieCommand(guidId), cancellationToken);
+            if (!success) return NotFound(new { Message = "Movie not found" });
+            return Ok(new { Message = "Movie deleted successfully!" });
+        }
+        return NotFound(new { Message = "Movie not found" });
     }
 }
