@@ -71,8 +71,8 @@ public class ChapaPaymentService : IPaymentService
                     ["return_url"] = returnUrl,
                     ["customization"] = new
                     {
-                        title = "CineFlow Ticket Payment",
-                        description = "Payment for CineFlow Cinema Movie Ticket"
+                        title = "CineFlow Ticket",
+                        description = "CineFlow Movie Ticket"
                     }
                 };
 
@@ -106,19 +106,21 @@ public class ChapaPaymentService : IPaymentService
                 else
                 {
                     var errBody = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("Chapa API initialization response {StatusCode} for {Reference}: {ErrorBody}",
-                        response.StatusCode, reference, errBody);
+                    _logger.LogError("Chapa API initialization error {StatusCode} for {Reference}: {ErrorBody}",
+                         response.StatusCode, reference, errBody);
+                    throw new InvalidOperationException($"Chapa payment initialization failed: {errBody}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not InvalidOperationException)
             {
                 _logger.LogError(ex, "Error while calling Chapa API for reference {Reference}", reference);
+                throw new InvalidOperationException($"Chapa API connection error: {ex.Message}", ex);
             }
         }
 
-        // Return Chapa checkout URL format so frontend redirects to the official Chapa payment UI
-        _logger.LogInformation("Using Chapa hosted checkout URL for reference {Reference}", reference);
-        return $"https://checkout.chapa.co/checkout/web/pay/{reference}";
+        // Development fallback only when SecretKey is not configured
+        _logger.LogInformation("Chapa SecretKey not set. Using simulation return URL for reference {Reference}", reference);
+        return returnUrl;
     }
 
     public async Task<PaymentVerificationResult> VerifyPaymentAsync(string reference)
