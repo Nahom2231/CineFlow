@@ -33,8 +33,25 @@ public class ChapaPaymentService : IPaymentService
         string email,
         string reference)
     {
+        return await InitializePaymentAsync(new PaymentInitializeRequest(amount, email, reference));
+    }
+
+    public async Task<string> InitializePaymentAsync(PaymentInitializeRequest request)
+    {
         var secretKey = _options.SecretKey;
         var baseUrl = string.IsNullOrWhiteSpace(_options.BaseUrl) ? "https://api.chapa.co" : _options.BaseUrl.TrimEnd('/');
+        var reference = request.Reference;
+
+        var baseReturnUrl = !string.IsNullOrWhiteSpace(request.ReturnUrl)
+            ? request.ReturnUrl
+            : (!string.IsNullOrWhiteSpace(_options.ReturnUrl) ? _options.ReturnUrl : "http://localhost:4200/ticket-confirmation");
+
+        var separator = baseReturnUrl.Contains('?') ? "&" : "?";
+        var returnUrl = $"{baseReturnUrl}{separator}tx_ref={Uri.EscapeDataString(reference)}";
+
+        var callbackUrl = !string.IsNullOrWhiteSpace(request.CallbackUrl)
+            ? request.CallbackUrl
+            : _options.CallbackUrl;
 
         if (!string.IsNullOrWhiteSpace(secretKey))
         {
@@ -43,22 +60,31 @@ public class ChapaPaymentService : IPaymentService
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/v1/transaction/initialize");
                 requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
-                var payload = new
+                var payload = new Dictionary<string, object>
                 {
-                    amount = amount.ToString(CultureInfo.InvariantCulture),
-                    currency = "ETB",
-                    email = email,
-                    first_name = "CineFlow",
-                    last_name = "Customer",
-                    tx_ref = reference,
-                    callback_url = _options.CallbackUrl,
-                    return_url = $"http://localhost:4200/ticket-confirmation?tx_ref={reference}",
-                    customization = new
+                    ["amount"] = request.Amount.ToString(CultureInfo.InvariantCulture),
+                    ["currency"] = string.IsNullOrWhiteSpace(request.Currency) ? "ETB" : request.Currency.Trim().ToUpper(),
+                    ["email"] = request.Email.Trim(),
+                    ["first_name"] = string.IsNullOrWhiteSpace(request.FirstName) ? "CineFlow" : request.FirstName.Trim(),
+                    ["last_name"] = string.IsNullOrWhiteSpace(request.LastName) ? "Customer" : request.LastName.Trim(),
+                    ["tx_ref"] = reference,
+                    ["return_url"] = returnUrl,
+                    ["customization"] = new
                     {
                         title = "CineFlow Ticket Payment",
                         description = "Payment for CineFlow Cinema Movie Ticket"
                     }
                 };
+
+                if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+                {
+                    payload["phone_number"] = request.PhoneNumber.Trim();
+                }
+
+                if (!string.IsNullOrWhiteSpace(callbackUrl))
+                {
+                    payload["callback_url"] = callbackUrl;
+                }
 
                 requestMessage.Content = JsonContent.Create(payload);
                 var response = await _httpClient.SendAsync(requestMessage);
@@ -72,7 +98,7 @@ public class ChapaPaymentService : IPaymentService
                         var url = checkoutUrlEl.GetString();
                         if (!string.IsNullOrWhiteSpace(url))
                         {
-                            _logger.LogInformation("Successfully initialized Chapa payment. Checkout URL: {Url}", url);
+                            _logger.LogInformation("Successfully initialized Chapa payment for {Reference}. Checkout URL: {Url}", reference, url);
                             return url;
                         }
                     }
@@ -80,7 +106,8 @@ public class ChapaPaymentService : IPaymentService
                 else
                 {
                     var errBody = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("Chapa API initialization response {StatusCode}: {ErrorBody}", response.StatusCode, errBody);
+                    _logger.LogWarning("Chapa API initialization response {StatusCode} for {Reference}: {ErrorBody}",
+                        response.StatusCode, reference, errBody);
                 }
             }
             catch (Exception ex)
@@ -90,6 +117,105 @@ public class ChapaPaymentService : IPaymentService
         }
 
         // Return Chapa checkout URL format so frontend redirects to the official Chapa payment UI
+        _logger.LogInformation("Using Chapa hosted checkout URL for reference {Reference}", reference);
         return $"https://checkout.chapa.co/checkout/web/pay/{reference}";
+    }
+
+    public async Task<PaymentVerificationResult> VerifyPaymentAsync(string reference)
+    {
+        var secretKey = _options.SecretKey;
+        var baseUrl = string.IsNullOrWhiteSpace(_options.BaseUrl) ? "https://api.chapa.co" : _options.BaseUrl.TrimEnd('/');
+
+        if (!string.IsNullOrWhiteSpace(secretKey))
+        {
+            try
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/v1/transaction/verify/{Uri.EscapeDataString(reference)}");
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+                var response = await _httpClient.SendAsync(requestMessage);
+                var content = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    using var jsonDoc = JsonDocument.Parse(content);
+                    var root = jsonDoc.RootElement;
+                    var message = root.TryGetProperty("message", out var msgEl) ? msgEl.GetString() ?? string.Empty : string.Empty;
+                    var status = root.TryGetProperty("status", out var stEl) ? stEl.GetString() ?? string.Empty : string.Empty;
+
+                    decimal? amount = null;
+                    string? currency = null;
+                    string? paymentMethod = null;
+
+                    if (root.TryGetProperty("data", out var dataEl))
+                    {
+                        if (dataEl.TryGetProperty("status", out var dataStatusEl))
+                        {
+                            status = dataStatusEl.GetString() ?? status;
+                        }
+                        if (dataEl.TryGetProperty("amount", out var amountEl))
+                        {
+                            if (amountEl.ValueKind == JsonValueKind.Number && amountEl.TryGetDecimal(out var parsedAmount))
+                            {
+                                amount = parsedAmount;
+                            }
+                            else if (amountEl.ValueKind == JsonValueKind.String && decimal.TryParse(amountEl.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var strAmount))
+                            {
+                                amount = strAmount;
+                            }
+                        }
+                        if (dataEl.TryGetProperty("currency", out var currEl))
+                        {
+                            currency = currEl.GetString();
+                        }
+                        if (dataEl.TryGetProperty("method", out var methodEl))
+                        {
+                            paymentMethod = methodEl.GetString();
+                        }
+                    }
+
+                    var isSuccess = string.Equals(status, "success", StringComparison.OrdinalIgnoreCase);
+                    _logger.LogInformation("Chapa verification for {Reference}: Status={Status}, Success={IsSuccess}", reference, status, isSuccess);
+
+                    return new PaymentVerificationResult(
+                        Success: isSuccess,
+                        Reference: reference,
+                        Status: status,
+                        Message: message,
+                        Amount: amount,
+                        Currency: currency,
+                        PaymentMethod: paymentMethod);
+                }
+                else
+                {
+                    _logger.LogWarning("Chapa API verification failed with status {StatusCode}: {Body}", response.StatusCode, content);
+                    return new PaymentVerificationResult(
+                        Success: false,
+                        Reference: reference,
+                        Status: "failed",
+                        Message: $"Chapa verification returned {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while verifying Chapa payment for reference {Reference}", reference);
+                return new PaymentVerificationResult(
+                    Success: false,
+                    Reference: reference,
+                    Status: "error",
+                    Message: ex.Message);
+            }
+        }
+
+        // Development / simulation fallback when SecretKey is not set
+        _logger.LogInformation("Chapa SecretKey not set. Returning verified simulation status for {Reference}", reference);
+        return new PaymentVerificationResult(
+            Success: true,
+            Reference: reference,
+            Status: "success",
+            Message: "Payment verified successfully (simulation mode)",
+            Amount: null,
+            Currency: "ETB",
+            PaymentMethod: "Chapa Gateway");
     }
 }

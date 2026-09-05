@@ -38,7 +38,9 @@ public class PaymentController : ControllerBase
         string? Currency,
         string? Reference,
         Guid? ScheduleId,
-        string? SeatNumber);
+        string? SeatNumber,
+        string? ReturnUrl = null,
+        string? CallbackUrl = null);
 
     public record EncryptDataRequest(string PlainText);
 
@@ -49,7 +51,9 @@ public class PaymentController : ControllerBase
         string? Reference,
         string? Status,
         string? TxRef,
-        decimal? Amount);
+        decimal? Amount,
+        string? Currency,
+        string? PaymentMethod);
     #endregion
 
     /// <summary>
@@ -85,10 +89,16 @@ public class PaymentController : ControllerBase
                 request.Amount, request.Email, reference);
 
             // Call IPaymentService (ChapaPaymentService)
-            var checkoutUrlOrRef = await _paymentService.InitializePaymentAsync(
-                request.Amount,
-                request.Email,
-                reference);
+            var checkoutUrlOrRef = await _paymentService.InitializePaymentAsync(new PaymentInitializeRequest(
+                Amount: request.Amount,
+                Email: request.Email,
+                Reference: reference,
+                FirstName: request.FirstName,
+                LastName: request.LastName,
+                PhoneNumber: request.PhoneNumber,
+                Currency: request.Currency,
+                ReturnUrl: request.ReturnUrl,
+                CallbackUrl: request.CallbackUrl));
 
             // Encrypt reference using IEncryptionService for secure client verification roundtrips
             var encryptedReference = _encryptionService.Encrypt(reference);
@@ -121,7 +131,7 @@ public class PaymentController : ControllerBase
     /// </summary>
     [HttpGet("verify/{reference}")]
     [AllowAnonymous]
-    public IActionResult VerifyPayment(string reference)
+    public async Task<IActionResult> VerifyPayment(string reference)
     {
         if (string.IsNullOrWhiteSpace(reference))
         {
@@ -144,12 +154,17 @@ public class PaymentController : ControllerBase
 
             _logger.LogInformation("Verifying payment with reference {DecryptedReference}", decryptedReference);
 
+            var verification = await _paymentService.VerifyPaymentAsync(decryptedReference);
+
             return Ok(new
             {
-                Success = true,
-                Reference = decryptedReference,
-                Status = "Success",
-                Message = "Payment verified successfully."
+                Success = verification.Success,
+                Reference = verification.Reference,
+                Status = verification.Status,
+                Message = verification.Message,
+                Amount = verification.Amount,
+                Currency = verification.Currency,
+                PaymentMethod = verification.PaymentMethod
             });
         }
         catch (Exception ex)
@@ -171,31 +186,66 @@ public class PaymentController : ControllerBase
     [AllowAnonymous]
     public IActionResult ProcessCallback([FromBody] ChapaCallbackPayload payload)
     {
-        _logger.LogInformation("Received Chapa payment callback for reference {Reference}, status {Status}",
-            payload?.Reference ?? payload?.TxRef, payload?.Status);
+        var txnRef = payload?.Reference ?? payload?.TxRef ?? "unknown";
+        var status = payload?.Status ?? "unknown";
+
+        if (Request.Headers.TryGetValue("x-chapa-signature", out var signature))
+        {
+            _logger.LogInformation("Webhook signature received: {Signature}", signature.ToString());
+        }
+
+        _logger.LogInformation("Received Chapa payment callback webhook for reference {Reference}, status {Status}, amount {Amount}",
+            txnRef, status, payload?.Amount);
 
         return Ok(new
         {
             Success = true,
+            Reference = txnRef,
+            Status = status,
             Message = "Payment callback received and processed successfully."
         });
     }
 
     /// <summary>
     /// GET callback endpoint when users are redirected back from Chapa checkout.
+    /// Redirects browser users to the frontend ticket-confirmation page.
     /// </summary>
     [HttpGet("callback")]
     [AllowAnonymous]
-    public IActionResult HandleRedirectCallback([FromQuery] string? trx_ref, [FromQuery] string? status)
+    public IActionResult HandleRedirectCallback(
+        [FromQuery] string? trx_ref,
+        [FromQuery] string? tx_ref,
+        [FromQuery] string? status)
     {
-        _logger.LogInformation("Redirect callback received for transaction {TrxRef} with status {Status}",
-            trx_ref, status);
+        var reference = !string.IsNullOrWhiteSpace(trx_ref) ? trx_ref : tx_ref;
+        var txnStatus = status ?? "success";
+
+        _logger.LogInformation("Redirect callback received for transaction {Reference} with status {Status}",
+            reference, txnStatus);
+
+        var acceptHeader = Request.Headers.Accept.ToString();
+        var isBrowserRequest = string.IsNullOrWhiteSpace(acceptHeader) ||
+                               acceptHeader.Contains("text/html") ||
+                               acceptHeader.Contains("*/*");
+
+        if (isBrowserRequest && !string.IsNullOrWhiteSpace(reference))
+        {
+            var baseReturnUrl = !string.IsNullOrWhiteSpace(_chapaOptions.ReturnUrl)
+                ? _chapaOptions.ReturnUrl
+                : "http://localhost:4200/ticket-confirmation";
+
+            var separator = baseReturnUrl.Contains('?') ? "&" : "?";
+            var targetUrl = $"{baseReturnUrl}{separator}tx_ref={Uri.EscapeDataString(reference)}&status={Uri.EscapeDataString(txnStatus)}";
+
+            _logger.LogInformation("Redirecting browser from Chapa callback to frontend: {TargetUrl}", targetUrl);
+            return Redirect(targetUrl);
+        }
 
         return Ok(new
         {
             Success = true,
-            TransactionReference = trx_ref,
-            Status = status ?? "pending",
+            TransactionReference = reference,
+            Status = txnStatus,
             Message = "Transaction redirect received."
         });
     }

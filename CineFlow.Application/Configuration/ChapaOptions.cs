@@ -11,4 +11,6 @@ public class ChapaOptions
     public string BaseUrl { get; set; } = "https://api.chapa.co";
 
     public string CallbackUrl { get; set; } = string.Empty;
+
+    public string ReturnUrl { get; set; } = "http://localhost:4200/ticket-confirmation";
 }
