@@ -31,6 +31,7 @@ public class AuthController : ControllerBase
     public record LoginRequest(string Email, string Password);
     public record RefreshTokenRequest(string? Token, string RefreshToken);
     public record RevokeTokenRequest(string? Email);
+    public record ResetPasswordRequest(string Email, string NewPassword);
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -274,6 +275,59 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { Message = "Refresh token revoked successfully." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return BadRequest(new { Message = "Email and new password are required." });
+        }
+
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var user = await _userManager.FindByEmailAsync(normalizedEmail) 
+                   ?? await _userManager.FindByNameAsync(normalizedEmail);
+
+        if (user == null)
+        {
+            return NotFound(new { Message = "No user found with the provided email address." });
+        }
+
+        // 1. Reset any lockout and access failed counters
+        await _userManager.SetLockoutEndDateAsync(user, null);
+        await _userManager.ResetAccessFailedCountAsync(user);
+
+        // 2. Generate reset token and set new password
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            return BadRequest(new { Message = string.Join(" ", errors), Errors = result.Errors });
+        }
+
+        // 3. Issue fresh tokens for seamless authenticated access
+        var userRoles = await _userManager.GetRolesAsync(user);
+        var (tokenString, expiration, jwtId) = GenerateAccessToken(user, userRoles);
+        var refreshToken = GenerateRefreshToken();
+        var refreshExpiration = DateTimeOffset.UtcNow.AddDays(7);
+
+        var tokenRecord = $"{refreshToken}|{jwtId}|{refreshExpiration.ToUnixTimeSeconds()}";
+        await _userManager.SetAuthenticationTokenAsync(user, "CineFlowApi", "RefreshToken", tokenRecord);
+
+        return Ok(new
+        {
+            Message = "Password has been successfully reset.",
+            Token = tokenString,
+            Expiration = expiration,
+            RefreshToken = refreshToken,
+            RefreshTokenExpiration = refreshExpiration.UtcDateTime,
+            Email = user.Email,
+            Roles = userRoles,
+            UserId = user.Id
+        });
     }
 
     [HttpPost("seed-admin")]
