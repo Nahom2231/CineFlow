@@ -1,4 +1,5 @@
 using CineFlow.Application.Schedules.Commands;
+using CineFlow.Application.Schedules.Dtos;
 using CineFlow.Application.Schedules.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -66,6 +67,29 @@ public class ScheduleController : ControllerBase
         if (allSchedules != null && allSchedules.Any()) return Ok(allSchedules.First());
 
         return NotFound(new { Message = "Schedule not found" });
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateSchedule(string id, [FromBody] UpdateScheduleDto dto, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(id, out var guidId))
+        {
+            return NotFound(new { Message = "Schedule not found" });
+        }
+
+        try
+        {
+            var command = new UpdateScheduleCommand(guidId, dto.MovieId, dto.CinemaHallId, dto.Showtime, dto.TicketPrice);
+            var success = await _mediator.Send(command, cancellationToken);
+            if (!success) return NotFound(new { Message = "Schedule not found" });
+
+            return Ok(new { Message = "Schedule updated successfully!" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]

@@ -1,4 +1,5 @@
 using CineFlow.Application.Movies.Commands;
+using CineFlow.Application.Movies.Dtos;
 using CineFlow.Application.Movies.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -65,6 +66,37 @@ public class MoviesController : ControllerBase
     {
         var movieId = await _mediator.Send(command, cancellationToken);
         return Ok(new { MovieId = movieId, Message = "Movie created successfully!" });
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateMovie(string id, [FromBody] UpdateMovieDto dto, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(id, out var guidId))
+        {
+            return NotFound(new { Message = "Movie not found" });
+        }
+
+        var command = new UpdateMovieCommand(
+            guidId,
+            dto.TitleEnglish,
+            dto.TitleAmharic,
+            dto.DescriptionEnglish,
+            dto.DescriptionAmharic,
+            dto.DurationMinutes,
+            dto.Genre,
+            dto.AudioLanguage,
+            dto.DirectorId,
+            dto.StarIds,
+            dto.FeaturedImageUrl,
+            null,
+            dto.GalleryImageUrls
+        );
+
+        var success = await _mediator.Send(command, cancellationToken);
+        if (!success) return NotFound(new { Message = "Movie not found" });
+
+        return Ok(new { Message = "Movie updated successfully!" });
     }
 
     [HttpDelete("{id}")]

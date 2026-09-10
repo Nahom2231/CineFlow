@@ -2,14 +2,13 @@ using System.Security.Claims;
 using CineFlow.Application.Tickets.Commands;
 using CineFlow.Application.Tickets.Queries;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-namespace CIneFlow.Api.Controllers;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CineFlow.Api.Controllers;
 
 [ApiController]
-
 [Route("api/v1/[controller]")]
-
 public class TicketsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -18,16 +17,16 @@ public class TicketsController : ControllerBase
     {
         _mediator = mediator;
     }
-    [Authorize]
+
     [HttpPost("book")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<IActionResult> BookTicket([FromBody] BookTicketCommand dto, CancellationToken cancellationToken)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)?? "test-user-guid";
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-user-guid";
         var command = new BookTicketCommand(
-             dto.ScheduleId,
+            dto.ScheduleId,
             dto.SeatNumber,
-             dto.PaymentPhoneNumber,
+            dto.PaymentPhoneNumber,
             dto.PaymentProvider,
             userId
         );
@@ -35,6 +34,7 @@ public class TicketsController : ControllerBase
         var ticketId = await _mediator.Send(command, cancellationToken);
         return Ok(new { TicketId = ticketId, Message = "Ticket Successfully booked!" });
     }
+
     [HttpPost("validate")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ValidateTicket([FromBody] ValidateTicketCommand command, CancellationToken cancellationToken)
@@ -42,11 +42,22 @@ public class TicketsController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }
+
     [HttpPost("hold")]
     public async Task<IActionResult> HoldSeat([FromBody] HoldSeatCommand command)
     {
-        var reservationId= await _mediator.Send(command);
-        return Ok(new {ReservationId = reservationId, Message = "Seat held for 10 minutes."});
+        var reservationId = await _mediator.Send(command);
+        return Ok(new { ReservationId = reservationId, Message = "Seat held for 10 minutes." });
+    }
+
+    [HttpDelete("hold/{reservationId:guid}")]
+    public async Task<IActionResult> ReleaseSeatHold(Guid reservationId, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var success = await _mediator.Send(new ReleaseSeatHoldCommand(reservationId, userId), cancellationToken);
+        if (!success) return NotFound(new { Message = "Reservation not found or already released" });
+
+        return Ok(new { Message = "Seat hold released successfully." });
     }
 
     /// <summary>
@@ -75,14 +86,47 @@ public class TicketsController : ControllerBase
         var ticket = await _mediator.Send(query, cancellationToken);
         return Ok(ticket);
     }
+
     [HttpGet("my-bookings")]
-[Authorize]
-public async Task<IActionResult> GetMyBookings(CancellationToken cancellationToken)
-{
-    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-user-guid";
-    var query = new GetUserBookingsQuery(userId);
-    var bookings = await _mediator.Send(query, cancellationToken);
-    
-    return Ok(bookings);
-}
+    [Authorize]
+    public async Task<IActionResult> GetMyBookings(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-user-guid";
+        var query = new GetUserBookingsQuery(userId);
+        var bookings = await _mediator.Send(query, cancellationToken);
+        return Ok(bookings);
+    }
+
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAllTickets([FromQuery] Guid? scheduleId, [FromQuery] string? userId, CancellationToken cancellationToken)
+    {
+        var query = new GetAllTicketsQuery(scheduleId, userId);
+        var tickets = await _mediator.Send(query, cancellationToken);
+        return Ok(tickets);
+    }
+
+    [HttpDelete("{ticketId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> CancelTicket(Guid ticketId, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = User.IsInRole("Admin");
+
+        try
+        {
+            var success = await _mediator.Send(new CancelTicketCommand(ticketId, userId, isAdmin), cancellationToken);
+            if (!success) return NotFound(new { Message = "Ticket not found." });
+
+            return Ok(new { Message = "Ticket cancelled successfully and seat returned to availability." });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
 }
