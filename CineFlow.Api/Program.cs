@@ -8,6 +8,8 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi; 
 using Infrastructure.Configuration;
 using Infrastructure.Security;
+using Microsoft.EntityFrameworkCore;
+using CineFlow.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,19 +76,27 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger UI across environments for live API documentation & testing
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "CineFlow API V1");
+    c.RoutePrefix = "swagger";
+});
+
+// Auto-apply EF Core database migrations on startup if connection string is configured
+using (var scope = app.Services.CreateScope())
+{
+    try
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CineFlow API V1");
-    });
-    app.MapOpenApi();
-}
-else
-{
-    app.UseHttpsRedirection();
+        var db = scope.ServiceProvider.GetRequiredService<CineFlowDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+        logger?.LogWarning(ex, "Automatic database migration skipped or failed during startup: {Message}", ex.Message);
+    }
 }
 
 app.UseRouting();
